@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import CategoryPieChart from "@/components/transactions/CategoryPieChart";
 
 const PERIOD_OPTIONS = [
-  { label: "آخر 30 يوم", days: 30 },
-  { label: "آخر 90 يوم", days: 90 },
-  { label: "كل الوقت", days: null },
+  { label: "30 يوم", days: 30 },
+  { label: "90 يوم", days: 90 },
+  { label: "الكل", days: null },
 ];
+
+const CATEGORY_ICONS = {
+  "طعام": "🍔", "ترفيه": "🎮", "تسوق": "🛍️", "إيجار": "🏠",
+  "فواتير": "💡", "تأمين": "🛡️", "مواصلات": "🚗", "راتب": "💼", "أخرى": "💰"
+};
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -16,6 +21,7 @@ export default function Transactions() {
   const [period, setPeriod] = useState(30);
   const [showForm, setShowForm] = useState(false);
   const [editTx, setEditTx] = useState(null);
+  const [activeTab, setActiveTab] = useState("list");
 
   const loadTransactions = useCallback(async () => {
     setLoading(true);
@@ -50,95 +56,117 @@ export default function Transactions() {
   const fmt = (v) => v.toLocaleString("ar-SA", { minimumFractionDigits: 0 }) + " ر.س";
 
   return (
-    <div dir="rtl">
+    <div dir="rtl" className="min-h-screen" style={{ background: "#0a0e1a" }}>
       {/* Header */}
-      <div className="bg-gradient-to-l from-[#1e3a8a] to-[#7c3aed] px-5 pt-12 pb-8 rounded-b-3xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">المعاملات</h1>
+      <div className="px-5 pt-12 pb-5">
+        <div className="flex items-center justify-between mb-5">
+          <h1 className="text-white text-xl font-bold">المعاملات</h1>
           <button
             onClick={handleAdd}
-            className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-medium px-3 py-1.5 rounded-xl transition"
+            className="flex items-center gap-1.5 text-white text-xs font-medium px-3 py-2 rounded-xl"
+            style={{ background: "#4f46e5" }}
           >
-            <Plus className="w-4 h-4" />
-            إضافة معاملة
+            <Plus className="w-3.5 h-3.5" />
+            إضافة
           </button>
         </div>
-      </div>
 
-      <div className="px-4 mt-4 space-y-4">
         {/* Period filter */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 rounded-2xl p-1" style={{ background: "#0f1525" }}>
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.label}
               onClick={() => setPeriod(opt.days)}
-              className={`flex-1 py-1.5 rounded-xl text-xs font-medium border transition-colors ${
-                period === opt.days
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300"
-              }`}
+              className="flex-1 py-2 rounded-xl text-xs font-medium transition-all"
+              style={period === opt.days
+                ? { background: "#4f46e5", color: "white" }
+                : { color: "#64748b" }
+              }
             >
               {opt.label}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Summary bar */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-            <p className="text-[10px] text-gray-400 mb-1">المصروفات</p>
-            <p className="text-sm font-bold text-red-500">{fmt(totalExpenses)}</p>
+      {/* Summary cards */}
+      <div className="px-4 grid grid-cols-3 gap-3 mb-4">
+        <div className="rounded-2xl p-3 text-center" style={{ background: "#0f1525" }}>
+          <div className="flex justify-center mb-1">
+            <TrendingDown className="w-4 h-4 text-red-400" />
           </div>
-          <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-            <p className="text-[10px] text-gray-400 mb-1">الدخل</p>
-            <p className="text-sm font-bold text-emerald-500">{fmt(totalIncome)}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 text-center">
-            <p className="text-[10px] text-gray-400 mb-1">عدد المعاملات</p>
-            <p className="text-sm font-bold text-gray-700">{transactions.length}</p>
-          </div>
+          <p className="text-[10px] text-slate-500 mb-0.5">مصروفات</p>
+          <p className="text-xs font-bold text-red-400">{fmt(totalExpenses)}</p>
         </div>
+        <div className="rounded-2xl p-3 text-center" style={{ background: "#0f1525" }}>
+          <div className="flex justify-center mb-1">
+            <TrendingUp className="w-4 h-4 text-emerald-400" />
+          </div>
+          <p className="text-[10px] text-slate-500 mb-0.5">دخل</p>
+          <p className="text-xs font-bold text-emerald-400">{fmt(totalIncome)}</p>
+        </div>
+        <div className="rounded-2xl p-3 text-center" style={{ background: "#0f1525" }}>
+          <p className="text-[10px] text-slate-500 mb-1 mt-5">عدد</p>
+          <p className="text-xs font-bold text-slate-300">{transactions.length}</p>
+        </div>
+      </div>
 
-        {/* Pie chart */}
-        <CategoryPieChart transactions={transactions} />
+      {/* Tabs */}
+      <div className="px-4 mb-4 flex gap-2 rounded-2xl p-1 mx-4" style={{ background: "#0f1525" }}>
+        <button
+          onClick={() => setActiveTab("list")}
+          className="flex-1 py-2 rounded-xl text-xs font-medium transition-all"
+          style={activeTab === "list" ? { background: "#1a2340", color: "white" } : { color: "#64748b" }}
+        >
+          القائمة
+        </button>
+        <button
+          onClick={() => setActiveTab("chart")}
+          className="flex-1 py-2 rounded-xl text-xs font-medium transition-all"
+          style={activeTab === "chart" ? { background: "#1a2340", color: "white" } : { color: "#64748b" }}
+        >
+          المخطط
+        </button>
+      </div>
 
-        {/* Transaction list */}
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-7 h-7 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin" />
+      <div className="px-4">
+        {activeTab === "chart" ? (
+          <CategoryPieChart transactions={transactions} />
+        ) : loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-7 h-7 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
           </div>
         ) : transactions.length === 0 ? (
-          <div className="flex flex-col items-center py-12 text-center">
-            <p className="text-gray-400 text-sm">لا توجد معاملات في هذه الفترة</p>
+          <div className="flex flex-col items-center py-16 text-center">
+            <p className="text-slate-500 text-sm">لا توجد معاملات في هذه الفترة</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {transactions.map((tx, idx) => (
+          <div className="space-y-2">
+            {transactions.map((tx) => (
               <div
                 key={tx.id}
-                className={`flex items-center gap-3 px-4 py-3 ${idx !== 0 ? "border-t border-gray-50" : ""}`}
+                className="flex items-center gap-3 p-4 rounded-2xl"
+                style={{ background: "#0f1525" }}
               >
-                {/* Type indicator */}
-                <div className={`w-1.5 h-10 rounded-full flex-shrink-0 ${tx.type === "income" ? "bg-emerald-400" : "bg-red-400"}`} />
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate">{tx.merchant_name}</p>
-                  <p className="text-xs text-gray-400">{tx.category} · {tx.date}</p>
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg flex-shrink-0" style={{ background: "#1a2340" }}>
+                  {CATEGORY_ICONS[tx.category] || "💰"}
                 </div>
-
-                {/* Amount */}
-                <p className={`text-sm font-bold flex-shrink-0 ${tx.type === "income" ? "text-emerald-500" : "text-red-500"}`}>
-                  {tx.type === "income" ? "+" : "-"}{(tx.amount || 0).toLocaleString("ar-SA")} {tx.currency || "ر.س"}
-                </p>
-
-                {/* Actions */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold truncate">{tx.merchant_name}</p>
+                  <p className="text-slate-500 text-xs">{tx.category} · {tx.date}</p>
+                </div>
+                <div className="text-left flex-shrink-0">
+                  <p className={`text-sm font-bold ${tx.type === "income" ? "text-emerald-400" : "text-red-400"}`}>
+                    {tx.type === "income" ? "+" : "-"}{(tx.amount || 0).toLocaleString("ar-SA")}
+                  </p>
+                  <p className="text-slate-600 text-[10px] text-left">{tx.currency || "SAR"}</p>
+                </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => handleEdit(tx)} className="text-gray-300 hover:text-indigo-500 p-1">
-                    <Pencil className="w-4 h-4" />
+                  <button onClick={() => handleEdit(tx)} className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: "#1a2340" }}>
+                    <Pencil className="w-3 h-3 text-indigo-400" />
                   </button>
-                  <button onClick={() => handleDelete(tx.id)} className="text-gray-300 hover:text-red-500 p-1">
-                    <Trash2 className="w-4 h-4" />
+                  <button onClick={() => handleDelete(tx.id)} className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: "#1a2340" }}>
+                    <Trash2 className="w-3 h-3 text-red-400" />
                   </button>
                 </div>
               </div>
