@@ -14,12 +14,12 @@ const defaultForm = {
 };
 
 const inputStyle = {
-  background: "#1a2340",
-  border: "1px solid #2a3a5c",
+  background: "#252836",
+  border: "1px solid #2e3347",
   borderRadius: 12,
   color: "white",
   width: "100%",
-  padding: "10px 12px",
+  padding: "11px 14px",
   fontSize: 14,
   outline: "none",
 };
@@ -41,14 +41,14 @@ export default function TransactionForm({ transaction, onSave, onClose }) {
     }
   }, [transaction]);
 
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (!form.merchant_name || !form.amount || !form.date) return;
     setSaving(true);
-    const data = { ...form, amount: parseFloat(form.amount) };
     try {
+      const data = { ...form, amount: parseFloat(form.amount) };
       if (transaction?.id) {
         await base44.entities.Transaction.update(transaction.id, data);
       } else {
@@ -61,42 +61,38 @@ export default function TransactionForm({ transaction, onSave, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(0,0,0,0.75)" }} onClick={onClose}>
       <div
         className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6"
-        style={{ background: "#0f1525" }}
-        onClick={(e) => e.stopPropagation()}
+        style={{ background: "#1a1d27" }}
+        onClick={e => e.stopPropagation()}
         dir="rtl"
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white text-lg font-bold">
             {transaction?.id ? "تعديل المعاملة" : "إضافة معاملة"}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#1a2340" }}>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#252836" }}>
             <X className="w-4 h-4 text-slate-400" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Type toggle */}
-          <div className="flex rounded-2xl overflow-hidden p-1 gap-1" style={{ background: "#1a2340" }}>
+          <div className="flex rounded-2xl overflow-hidden p-1 gap-1" style={{ background: "#252836" }}>
             <button
               type="button"
-              onClick={() => setForm((f) => ({ ...f, type: "expense" }))}
-              className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all"
-              style={form.type === "expense"
-                ? { background: "#ef4444", color: "white" }
-                : { color: "#64748b" }}
+              onClick={() => setForm(f => ({ ...f, type: "expense" }))}
+              className="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+              style={form.type === "expense" ? { background: "#ef4444", color: "white" } : { color: "#64748b" }}
             >
               مصروف
             </button>
             <button
               type="button"
-              onClick={() => setForm((f) => ({ ...f, type: "income" }))}
-              className="flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all"
-              style={form.type === "income"
-                ? { background: "#10b981", color: "white" }
-                : { color: "#64748b" }}
+              onClick={() => setForm(f => ({ ...f, type: "income" }))}
+              className="flex-1 py-2.5 text-sm font-bold rounded-xl transition-all"
+              style={form.type === "income" ? { background: "#10b981", color: "white" } : { color: "#64748b" }}
             >
               دخل
             </button>
@@ -109,31 +105,13 @@ export default function TransactionForm({ transaction, onSave, onClose }) {
 
           <div>
             <label className="block text-slate-400 text-xs mb-1.5">اسم التاجر / المصدر</label>
-            <input
-              type="text"
-              name="merchant_name"
-              value={form.merchant_name}
-              onChange={handleChange}
-              required
-              placeholder="مثال: مطعم الأصيل"
-              style={{ ...inputStyle }}
-            />
+            <input type="text" name="merchant_name" value={form.merchant_name} onChange={handleChange} required placeholder="مثال: مطعم الأصيل" style={inputStyle} />
           </div>
 
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-slate-400 text-xs mb-1.5">المبلغ</label>
-              <input
-                type="number"
-                name="amount"
-                value={form.amount}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                style={inputStyle}
-              />
+              <input type="number" name="amount" value={form.amount} onChange={handleChange} required min="0" step="0.01" placeholder="0.00" style={inputStyle} />
             </div>
             <div className="w-24">
               <label className="block text-slate-400 text-xs mb-1.5">العملة</label>
@@ -148,15 +126,15 @@ export default function TransactionForm({ transaction, onSave, onClose }) {
           <div>
             <label className="block text-slate-400 text-xs mb-1.5">الفئة</label>
             <select name="category" value={form.category} onChange={handleChange} style={inputStyle}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-3 rounded-2xl font-bold text-white text-sm disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
+            className="w-full py-3.5 rounded-2xl font-bold text-white text-sm disabled:opacity-60 mt-2"
+            style={{ background: "linear-gradient(135deg,#1e3a8a,#7c3aed)" }}
           >
             {saving ? "جاري الحفظ..." : transaction?.id ? "حفظ التعديلات" : "إضافة المعاملة"}
           </button>
