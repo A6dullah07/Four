@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Hash } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Hash, Upload } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import CategoryPieChart from "@/components/transactions/CategoryPieChart";
+import CsvImport from "@/components/transactions/CsvImport";
 
 const PERIOD_OPTIONS = [
   { label: "30 يوم", days: 30 },
@@ -22,6 +23,7 @@ export default function Transactions() {
   const [showForm, setShowForm] = useState(false);
   const [editTx, setEditTx] = useState(null);
   const [activeTab, setActiveTab] = useState("list");
+  const [showCsvImport, setShowCsvImport] = useState(false);
 
   const loadTransactions = useCallback(async () => {
     setLoading(true);
@@ -67,14 +69,24 @@ export default function Transactions() {
             <h1 className="text-white text-xl font-bold">المعاملات</h1>
             <p className="text-blue-200 text-xs mt-0.5">سجّل وتابع إنفاقك ودخلك</p>
           </div>
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            إضافة معاملة
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowCsvImport(true)}
+              className="flex items-center gap-1 text-white text-xs font-bold px-3 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)" }}
+            >
+              <Upload className="w-3.5 h-3.5" />
+              CSV
+            </button>
+            <button
+              onClick={handleAdd}
+              className="flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              إضافة
+            </button>
+          </div>
         </div>
 
         {/* Period filter */}
@@ -186,6 +198,12 @@ export default function Transactions() {
           transaction={editTx}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditTx(null); }}
+        />
+      )}
+      {showCsvImport && (
+        <CsvImport
+          onDone={loadTransactions}
+          onClose={() => setShowCsvImport(false)}
         />
       )}
     </div>
