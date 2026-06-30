@@ -1,0 +1,21 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "sender": {
+      "type": "string",
+      "enum": [
+        "user",
+        "assistant"
+      ]
+    }
+  },
+  "required": [
+    "message",
+    "sender"
+  ]
+}

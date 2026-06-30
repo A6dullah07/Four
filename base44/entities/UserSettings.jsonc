@@ -1,0 +1,19 @@
+{
+  "name": "UserSettings",
+  "type": "object",
+  "properties": {
+    "language": {
+      "type": "string",
+      "default": "ar"
+    },
+    "currency": {
+      "type": "string",
+      "default": "SAR"
+    },
+    "monthly_income": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": []
+}

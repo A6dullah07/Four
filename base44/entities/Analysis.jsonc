@@ -1,0 +1,22 @@
+{
+  "name": "Analysis",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "spending",
+        "portfolio",
+        "forecast"
+      ]
+    },
+    "result": {
+      "type": "string",
+      "maxLength": 10000
+    }
+  },
+  "required": [
+    "type",
+    "result"
+  ]
+}
