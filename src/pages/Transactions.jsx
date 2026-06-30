@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Hash, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp, TrendingDown, Hash, Upload, Building2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import TransactionForm from "@/components/transactions/TransactionForm";
 import CategoryPieChart from "@/components/transactions/CategoryPieChart";
 import CsvImport from "@/components/transactions/CsvImport";
+import PlaidConnect from "@/components/plaid/PlaidConnect";
 
 const PERIOD_OPTIONS = [
   { label: "30 يوم", days: 30 },
@@ -24,6 +25,7 @@ export default function Transactions() {
   const [editTx, setEditTx] = useState(null);
   const [activeTab, setActiveTab] = useState("list");
   const [showCsvImport, setShowCsvImport] = useState(false);
+  const [showPlaid, setShowPlaid] = useState(false);
 
   const loadTransactions = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,14 @@ export default function Transactions() {
             <p className="text-blue-200 text-xs mt-0.5">سجّل وتابع إنفاقك ودخلك</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowPlaid(s => !s)}
+              className="flex items-center gap-1 text-white text-xs font-bold px-3 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)" }}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              بنك
+            </button>
             <button
               onClick={() => setShowCsvImport(true)}
               className="flex items-center gap-1 text-white text-xs font-bold px-3 py-2.5 rounded-xl"
@@ -125,6 +135,13 @@ export default function Transactions() {
           <p className="text-xs font-bold text-slate-300">{transactions.length}</p>
         </div>
       </div>
+
+      {/* Plaid connect panel */}
+      {showPlaid && (
+        <div className="px-4 mb-2">
+          <PlaidConnect onImported={() => { loadTransactions(); setShowPlaid(false); }} />
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mx-4 mb-4 flex gap-1 rounded-2xl p-1" style={{ background: "#1a1d27" }}>
