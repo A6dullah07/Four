@@ -1,26 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Bell, Plus, Eye, EyeOff, TrendingUp, TrendingDown } from "lucide-react";
-
-const quickActions = [
-  { emoji: "💸", label: "تحويل محلي" },
-  { emoji: "🔄", label: "شحن رصيد" },
-  { emoji: "📄", label: "دفع فواتير" },
-  { emoji: "🌍", label: "تحويل دولي" },
-  { emoji: "🏦", label: "تحويل بنكي" },
-  { emoji: "👥", label: "رواتب" },
-];
-
-const trendingServices = [
-  { bg: "linear-gradient(135deg, #22c55e, #16a34a)", title: "دفع الفواتير", desc: "ادفع كل فواتيرك في مكان واحد.", cta: "اضغط للمزيد ←" },
-  { bg: "linear-gradient(135deg, #6366f1, #7c3aed)", title: "نقاط المكافآت", desc: "حوّل نقاطك إلى مزايا حصرية!", cta: "اضغط للمزيد ←" },
-];
+import { TrendingUp, TrendingDown, Wallet, PiggyBank, MessageCircle, Bell, Eye, EyeOff } from "lucide-react";
 
 export default function Home() {
   const [stats, setStats] = useState({ income: 0, expenses: 0 });
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [balanceVisible, setBalanceVisible] = useState(true);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -33,131 +20,98 @@ export default function Home() {
         ]);
         setUser(me);
         let income = 0, expenses = 0;
-        txns.forEach((t) => {
-          if (t.type === "income") income += t.amount || 0;
-          else expenses += t.amount || 0;
-        });
+        txns.forEach(t => { if (t.type === "income") income += t.amount || 0; else expenses += t.amount || 0; });
         setStats({ income, expenses });
-      } catch (e) {
-        const me = await base44.auth.me().catch(() => null);
-        setUser(me);
-      } finally {
-        setLoading(false);
-      }
+      } catch { } finally { setLoading(false); }
     };
     load();
   }, []);
 
   const savings = stats.income - stats.expenses;
-  const fmt = (v) => v.toLocaleString("ar-SA", { minimumFractionDigits: 2 });
+  const rate = stats.income > 0 ? Math.round((savings / stats.income) * 100) : 0;
+  const fmt = v => visible ? v.toLocaleString("ar-SA", { minimumFractionDigits: 0 }) + " ر.س" : "••••";
   const firstName = user?.full_name?.split(" ")[0] || "مستخدم";
-  const initials = firstName.charAt(0).toUpperCase();
+  const initials = firstName.charAt(0);
+
+  const cards = [
+    { label: "دخل هذا الشهر", value: fmt(stats.income), icon: TrendingUp, color: "#10b981", bg: "rgba(16,185,129,0.1)" },
+    { label: "مصاريف هذا الشهر", value: fmt(stats.expenses), icon: TrendingDown, color: "#f43f5e", bg: "rgba(244,63,94,0.1)" },
+    { label: "المدخرات", value: fmt(savings), icon: Wallet, color: "#6366f1", bg: "rgba(99,102,241,0.1)" },
+    { label: "نسبة الادخار", value: visible ? `${rate}%` : "••", icon: PiggyBank, color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+  ];
 
   return (
-    <div dir="rtl" className="min-h-screen overflow-x-hidden" style={{ background: "#111318" }}>
-
-      {/* ── Top bar ── */}
-      <div className="flex items-center justify-between px-4 pt-12 pb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm relative" style={{ background: "linear-gradient(135deg,#6366f1,#7c3aed)" }}>
-            {initials}
-            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#111318]" />
-          </div>
-          <div>
-            <p className="text-slate-400 text-xs">مرحباً 👋</p>
-            <p className="text-white font-bold text-sm leading-tight">{firstName}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Spin button */}
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-white" style={{ background: "linear-gradient(135deg,#06b6d4,#7c3aed)" }}>
-            🎯 سبين
-          </button>
-          <button className="w-10 h-10 rounded-full flex items-center justify-center relative" style={{ background: "#1e2130" }}>
-            <Bell className="w-4 h-4 text-slate-300" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Balance Card ── */}
-      <div className="mx-4 mt-2 rounded-3xl p-5" style={{ background: "#1a1d27" }}>
-        {/* Account Balance row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 text-xs">رصيد الحساب</span>
-            <button onClick={() => setBalanceVisible(v => !v)} className="text-slate-500">
-              {balanceVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-          <button className="flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold text-white" style={{ background: "linear-gradient(135deg,#6366f1,#7c3aed)" }}>
-            <Plus className="w-3 h-3" /> إضافة رصيد
-          </button>
-        </div>
-
-        {/* Big Balance */}
-        {loading ? (
-          <div className="h-10 w-36 rounded-xl mb-3 animate-pulse" style={{ background: "#2a2d3a" }} />
-        ) : (
-          <p className="text-white text-4xl font-bold tracking-tight mb-3">
-            {balanceVisible ? fmt(savings) : "••••••"}
-            <span className="text-slate-400 text-base font-normal mr-1">ر.س</span>
-          </p>
-        )}
-
-        {/* Remaining amount */}
-        <div className="border-t border-dashed mb-4" style={{ borderColor: "#2a2d3a" }} />
-        <div className="flex items-center justify-between text-xs mb-4">
-          <span className="text-slate-500">المبلغ المتبقي</span>
-          <div className="flex gap-3">
-            <span className="text-slate-300 font-semibold">{balanceVisible ? fmt(stats.income) : "••••"} <span className="text-slate-500 text-[10px]">دخل</span></span>
-            <span className="text-slate-300 font-semibold">{balanceVisible ? fmt(stats.expenses) : "••••"} <span className="text-slate-500 text-[10px]">مصروف</span></span>
-          </div>
-        </div>
-
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          {quickActions.map(({ emoji, label }) => (
-            <button key={label} className="flex flex-col items-center gap-1.5 py-2">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: "#252836" }}>
-                {emoji}
-              </div>
-              <span className="text-slate-400 text-[10px] text-center leading-tight">{label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Dots indicator */}
-        <div className="flex justify-center gap-1.5 mt-4">
-          <div className="h-1 w-6 rounded-full" style={{ background: "#6366f1" }} />
-          <div className="h-1 w-3 rounded-full" style={{ background: "#2a2d3a" }} />
-        </div>
-      </div>
-
-      {/* ── Alinma Pay Logo strip ── */}
-      <div className="flex justify-center my-4">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-lg" style={{ background: "linear-gradient(135deg,#06b6d4,#6366f1,#7c3aed)" }}>
-          م
-        </div>
-      </div>
-
-      {/* ── Trending Services ── */}
-      <div className="mx-4 mb-6">
-        <p className="text-slate-400 text-sm font-semibold mb-3">الخدمات الرائجة</p>
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-          {trendingServices.map((s) => (
-            <div
-              key={s.title}
-              className="flex-shrink-0 w-52 rounded-2xl p-4 relative overflow-hidden"
-              style={{ background: s.bg }}
-            >
-              <p className="text-white font-bold text-sm mb-1">{s.title}</p>
-              <p className="text-white/70 text-xs mb-3">{s.desc}</p>
-              <p className="text-white text-xs font-semibold">{s.cta}</p>
+    <div dir="rtl" className="min-h-screen" style={{ background: "#111318" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #4f46e5 50%, #7c3aed 100%)" }} className="px-5 pt-12 pb-16 rounded-b-3xl relative overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-44 h-44 rounded-full opacity-10 bg-white" />
+        <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-10 bg-white" />
+        <div className="relative z-10 flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ background: "rgba(255,255,255,0.2)" }}>
+              {initials}
             </div>
-          ))}
+            <div>
+              <p className="text-blue-200 text-xs">مرحباً 👋</p>
+              <p className="text-white font-bold text-sm">{firstName}</p>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center">
+            <button onClick={() => setVisible(v => !v)} className="text-blue-200">
+              {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+            <button className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.15)" }}>
+              <Bell className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
+        <div className="relative z-10">
+          <p className="text-blue-100 text-xs mb-0.5">المساعد المالي الذكي</p>
+          <h1 className="text-white text-xl font-bold leading-snug">تحليل مالي فوري<br />مع نصائح محددة</h1>
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="px-4 -mt-8">
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div className="w-7 h-7 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {cards.map(({ label, value, icon: Icon, color, bg }) => (
+              <div key={label} className="rounded-2xl p-4" style={{ background: "#1a1d27" }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: bg }}>
+                  <Icon className="w-4 h-4" style={{ color }} />
+                </div>
+                <p className="text-slate-500 text-[11px] mb-1">{label}</p>
+                <p className="text-white font-bold text-sm">{value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Savings rate bar */}
+      {!loading && stats.income > 0 && (
+        <div className="mx-4 mt-4 rounded-2xl p-4" style={{ background: "#1a1d27" }}>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-slate-400 text-xs">نسبة الادخار هذا الشهر</span>
+            <span className="text-indigo-400 text-xs font-bold">{rate}%</span>
+          </div>
+          <div className="w-full h-2 rounded-full" style={{ background: "#252836" }}>
+            <div className="h-2 rounded-full transition-all" style={{ width: `${Math.min(Math.max(rate, 0), 100)}%`, background: "linear-gradient(90deg,#4f46e5,#7c3aed)" }} />
+          </div>
+        </div>
+      )}
+
+      {/* CTA Button */}
+      <div className="mx-4 mt-4">
+        <Link to="/assistant" className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl font-bold text-white text-sm" style={{ background: "linear-gradient(135deg,#1e3a8a,#7c3aed)" }}>
+          <MessageCircle className="w-4 h-4" />
+          ابدأ المحادثة مع المساعد
+        </Link>
+      </div>
     </div>
   );
 }

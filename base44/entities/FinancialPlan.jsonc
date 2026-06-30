@@ -1,0 +1,25 @@
+{
+  "name": "FinancialPlan",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "monthly_payment": {
+      "type": "number"
+    },
+    "months": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 5000
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

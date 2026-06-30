@@ -12,6 +12,9 @@
         "user",
         "assistant"
       ]
+    },
+    "session_id": {
+      "type": "string"
     }
   },
   "required": [

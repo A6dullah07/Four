@@ -4,7 +4,7 @@ import BottomNav from "@/components/BottomNav";
 
 export default function AppLayout() {
   return (
-    <div dir="rtl" className="min-h-screen pb-20" style={{ background: "#0a0e1a" }}>
+    <div dir="rtl" className="min-h-screen pb-20" style={{ background: "#111318", fontFamily: "'Tajawal', 'Cairo', Tahoma, Arial, sans-serif" }}>
       <Outlet />
       <BottomNav />
     </div>
