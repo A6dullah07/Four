@@ -2,6 +2,108 @@ import React, { useState, useEffect, useRef } from "react";
 import { Send, Sparkles, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ReactMarkdown from "react-markdown";
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, CartesianGrid, AreaChart, Area, Legend,
+} from "recharts";
+
+const CHART_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+const fmtNum = v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : String(v);
+
+// ─── Inline Charts ─────────────────────────────────────────────────────────────
+function SpendingPie({ data }) {
+  if (!data?.length) return null;
+  return (
+    <div className="mt-3 rounded-2xl p-4" style={{ background: "#252836" }}>
+      <p className="text-white text-xs font-bold mb-3">توزيع الإنفاق حسب الفئة</p>
+      <div className="flex items-center gap-3">
+        <ResponsiveContainer width={120} height={120}>
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" innerRadius={32} outerRadius={52} dataKey="value" paddingAngle={3}>
+              {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip formatter={v => [`${Number(v).toLocaleString("ar-SA")} ر.س`]} contentStyle={{ background: "#1a1d27", border: "none", borderRadius: 8, color: "white", fontSize: 11 }} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="flex flex-col gap-1.5 flex-1">
+          {data.slice(0, 5).map((d, i) => (
+            <div key={d.name} className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                <span className="text-slate-400 text-[11px]">{d.name}</span>
+              </div>
+              <span className="text-white text-[11px] font-bold">{Number(d.value).toLocaleString("ar-SA")} ر.س</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BudgetPie({ data }) {
+  if (!data?.length) return null;
+  return (
+    <div className="mt-3 rounded-2xl p-4" style={{ background: "#252836" }}>
+      <p className="text-white text-xs font-bold mb-3">توزيع الميزانية الشهرية</p>
+      <div className="flex items-center gap-3">
+        <ResponsiveContainer width={120} height={120}>
+          <PieChart>
+            <Pie data={data} cx="50%" cy="50%" innerRadius={32} outerRadius={52} dataKey="value" paddingAngle={3}>
+              {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+            </Pie>
+            <Tooltip formatter={v => [`${Number(v).toLocaleString("ar-SA")} ر.س`]} contentStyle={{ background: "#1a1d27", border: "none", borderRadius: 8, color: "white", fontSize: 11 }} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="flex flex-col gap-1.5 flex-1">
+          {data.map((d, i) => (
+            <div key={d.name} className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                <span className="text-slate-400 text-[11px]">{d.name}</span>
+              </div>
+              <span className="text-white text-[11px] font-bold">{Number(d.value).toLocaleString("ar-SA")} ر.س</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MonthlyBar({ data }) {
+  if (!data?.length) return null;
+  return (
+    <div className="mt-3 rounded-2xl p-4" style={{ background: "#252836" }}>
+      <p className="text-white text-xs font-bold mb-3">التقدم الشهري للخطة</p>
+      <ResponsiveContainer width="100%" height={160}>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1a1d27" vertical={false} />
+          <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tickFormatter={fmtNum} tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} width={34} />
+          <Tooltip formatter={(v, name) => [`${Number(v).toLocaleString("ar-SA")} ر.س`, name === "paid" ? "مدفوع/مدخّر" : "متبقي"]} contentStyle={{ background: "#1a1d27", border: "none", borderRadius: 8, color: "white", fontSize: 11 }} />
+          <Bar dataKey="paid" fill="#6366f1" radius={[4, 4, 0, 0]} name="paid" />
+          <Bar dataKey="remaining" fill="#1e3a8a" radius={[4, 4, 0, 0]} name="remaining" />
+        </BarChart>
+      </ResponsiveContainer>
+      <div className="flex gap-3 mt-2">
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500" /><span className="text-slate-500 text-[10px]">مدفوع/مدخّر</span></div>
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-900" /><span className="text-slate-500 text-[10px]">متبقي</span></div>
+      </div>
+    </div>
+  );
+}
+
+function AssistantCharts({ charts }) {
+  if (!charts) return null;
+  return (
+    <div>
+      {charts.spending_pie && <SpendingPie data={charts.spending_pie} />}
+      {charts.budget_pie && <BudgetPie data={charts.budget_pie} />}
+      {charts.monthly_bar && <MonthlyBar data={charts.monthly_bar} />}
+    </div>
+  );
+}
 
 const SESSION_KEY = "fin_assistant_session";
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -100,7 +202,15 @@ export const FINANCIAL_SYSTEM_PROMPT = `أنت مساعد مالي ذكي متخ
 6. عند فشل Plaid أو نقص البيانات المصرفية، اعرض الإدخال اليدوي كبديل.
 7. عند طلب سعر سهم أو بيانات شركة، استخدم الإنترنت واذكر المصدر والوقت.
 
-تنبيه: أنت أداة مساعدة وليست بديلاً عن مستشار مالي مرخّص؛ ذكّر المستخدم بذلك عند إعطاء توصيات استثمارية.`;
+تنبيه: أنت أداة مساعدة وليست بديلاً عن مستشار مالي مرخّص؛ ذكّر المستخدم بذلك عند إعطاء توصيات استثمارية.
+
+[تعليمات الرسوم البيانية]
+عند طلب خطة مالية أو تحليل إنفاق أو توزيع ميزانية، أضف في آخر ردك هذا القسم المخفي فقط (JSON صحيح):
+[CHARTS]{"spending_pie":[{"name":"فئة","value":رقم}],"budget_pie":[{"name":"فئة","value":رقم}],"monthly_bar":[{"month":"ش1","paid":رقم,"remaining":رقم}]}[/CHARTS]
+- spending_pie: توزيع المصاريف الفعلية حسب الفئة (من بيانات المستخدم).
+- budget_pie: توزيع الميزانية المقترحة (ضروريات، ادخار، سداد، ترفيه...).
+- monthly_bar: مسار الخطة شهرياً (paid=تراكمي، remaining=متبقي) لـ 6 أو 12 شهر.
+- أضف فقط الأقسام المناسبة. لا تضف [CHARTS] للأسئلة العامة.`;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function getSessionId() {
@@ -137,38 +247,41 @@ function Message({ msg }) {
   const isUser = msg.role === "user";
   return (
     <div className={`flex mb-3 ${isUser ? "justify-start flex-row-reverse" : "justify-start"}`}>
-      <div className="flex items-end gap-2 max-w-[85%]">
+      <div className="flex items-end gap-2 max-w-[90%]">
         <div
           className="w-7 h-7 rounded-2xl flex items-center justify-center flex-shrink-0 text-xs font-bold"
           style={{ background: isUser ? "#1e3a8a" : "#252836" }}
         >
           {isUser ? "أ" : <Sparkles className="w-3.5 h-3.5 text-indigo-400" />}
         </div>
-        <div
-          className="px-4 py-3 rounded-2xl text-sm leading-relaxed"
-          style={isUser
-            ? { background: "#1e3a8a", color: "white", borderTopRightRadius: 6 }
-            : { background: "#1a1d27", color: "#e2e8f0", borderTopLeftRadius: 6 }
-          }
-        >
-          {isUser ? (
-            <p className="whitespace-pre-wrap">{msg.content}</p>
-          ) : (
-            <ReactMarkdown
-              className="prose prose-sm prose-invert max-w-none"
-              components={{
-                p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-200 text-sm leading-relaxed">{children}</p>,
-                strong: ({ children }) => <strong className="text-white font-bold">{children}</strong>,
-                ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-2 text-slate-300">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-2 text-slate-300">{children}</ol>,
-                li: ({ children }) => <li className="text-slate-300 text-sm">{children}</li>,
-                h3: ({ children }) => <h3 className="text-white font-bold text-sm mt-3 mb-1">{children}</h3>,
-                h4: ({ children }) => <h4 className="text-indigo-300 font-semibold text-xs mt-2 mb-1">{children}</h4>,
-              }}
-            >
-              {msg.content}
-            </ReactMarkdown>
-          )}
+        <div className="flex-1">
+          <div
+            className="px-4 py-3 rounded-2xl text-sm leading-relaxed"
+            style={isUser
+              ? { background: "#1e3a8a", color: "white", borderTopRightRadius: 6 }
+              : { background: "#1a1d27", color: "#e2e8f0", borderTopLeftRadius: 6 }
+            }
+          >
+            {isUser ? (
+              <p className="whitespace-pre-wrap">{msg.content}</p>
+            ) : (
+              <ReactMarkdown
+                className="prose prose-sm prose-invert max-w-none"
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0 text-slate-200 text-sm leading-relaxed">{children}</p>,
+                  strong: ({ children }) => <strong className="text-white font-bold">{children}</strong>,
+                  ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-2 text-slate-300">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-2 text-slate-300">{children}</ol>,
+                  li: ({ children }) => <li className="text-slate-300 text-sm">{children}</li>,
+                  h3: ({ children }) => <h3 className="text-white font-bold text-sm mt-3 mb-1">{children}</h3>,
+                  h4: ({ children }) => <h4 className="text-indigo-300 font-semibold text-xs mt-2 mb-1">{children}</h4>,
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
+            )}
+          </div>
+          {!isUser && msg.charts && <AssistantCharts charts={msg.charts} />}
         </div>
       </div>
     </div>
@@ -343,10 +456,19 @@ ${history ? `سجل المحادثة السابقة:\n${history}\n` : ""}
         model,
       });
 
-      const assistantMsg = { role: "assistant", content: result, id: Date.now() + "_a" };
+      // Extract hidden chart JSON if present
+      let cleanContent = result;
+      let charts = null;
+      const chartMatch = result.match(/\[CHARTS\]([\s\S]*?)\[\/CHARTS\]/);
+      if (chartMatch) {
+        try { charts = JSON.parse(chartMatch[1].trim()); } catch { }
+        cleanContent = result.replace(/\[CHARTS\][\s\S]*?\[\/CHARTS\]/, "").trim();
+      }
+
+      const assistantMsg = { role: "assistant", content: cleanContent, charts, id: Date.now() + "_a" };
       setMessages(prev => [...prev, assistantMsg]);
       await base44.entities.Conversation.create({
-        message: result, sender: "assistant", session_id: sessionId.current,
+        message: cleanContent, sender: "assistant", session_id: sessionId.current,
       });
     } catch {
       setMessages(prev => [...prev, {
