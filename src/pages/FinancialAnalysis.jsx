@@ -2,26 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { BarChart2, Upload, FileText, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AnalysisResult from "@/components/analysis/AnalysisResult";
-
-const SYSTEM_PROMPT = `أنت مساعد مالي ذكي متخصص ودود. خبرتك 20 سنة في تحليل المالية والاستثمار في السوق السعودي والخليج.
-
-دورك الأساسي:
-- تحليل النفقات والدخل الشخصي
-- قراءة وتحليل القوائم المالية المعقدة بما فيها الإيضاحات (Footnotes)
-- إعطاء نصائح توفير محددة وقابلة للقياس
-- بناء خطط مالية وخطط سداد
-- شرح المفاهيم المالية بطريقة سهلة
-- عند طلب المستخدم سعر سهم أو شركة، ابحث عن السعر الحالي من الإنترنت واذكر المصدر والوقت
-
-قواعد الرد:
-1. اجب دائماً بالعربية الفصحى المبسّطة مع الحفاظ على المصطلحات التقنية بالإنجليزية.
-2. استخدم الأرقام والنسب المئوية في كل إجابة — لا تقل فقط "أعلى" أو "أقل".
-3. ابدأ الإجابة بملخص سريع (جملة واحدة)، ثم التفاصيل، ثم النصائح.
-4. لكل توصية، أعطِ نسبة ثقتك (مثال: ثقة 90%).
-5. عند عدم كفاية البيانات، اطرح سؤالاً واضحاً بدلاً من التخمين.
-6. اعتمد على بيانات المستخدم الفعلية (المعاملات والدخل) المرفقة في السياق عند توفرها.
-
-تنبيه: أنت أداة مساعدة وليست بديلاً عن مستشار مالي مرخّص؛ ذكّر المستخدم بذلك عند إعطاء توصيات استثمارية.`;
+import { FINANCIAL_SYSTEM_PROMPT } from "@/pages/AIAssistant";
 
 const ANALYSIS_INSTRUCTION = `
 
@@ -56,7 +37,7 @@ export default function FinancialAnalysis() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       // Extract content using the LLM with vision
-      const prompt = `${SYSTEM_PROMPT}${ANALYSIS_INSTRUCTION}
+      const prompt = `${FINANCIAL_SYSTEM_PROMPT}${ANALYSIS_INSTRUCTION}
 
 محتوى الملف المرفق في الصورة/المستند أعلاه.`;
 
