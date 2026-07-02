@@ -6,70 +6,114 @@ import ReactMarkdown from "react-markdown";
 const SESSION_KEY = "fin_assistant_session";
 const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 
-const SUGGESTED = [
-  "حلّل نفقاتي وأعطني تقرير مفصّل",
-  "ابنِ لي خطة مالية شخصية لـ 12 شهر",
-  "حلّل الملاحظات المالية (Footnotes) لأرامكو",
-  "ما أفضل استراتيجية لتوزيع الراتب؟",
+// ─── Mode definitions ────────────────────────────────────────────────────────
+const MODES = [
+  {
+    id: "footnotes",
+    emoji: "📊",
+    label: "تحليل الملاحظات المالية",
+    sublabel: "Footnotes Analysis",
+    description: "استخرج وحلّل ملاحظات التقارير المالية لأي شركة",
+    trigger: "أريد تحليل الملاحظات المالية (Footnotes) لشركة معينة. اسألني عن اسم الشركة.",
+    followUp: [
+      "هل تريد شرح نقطة معينة بمزيد من التفصيل؟",
+      "هل تريد مقارنة مع شركات أخرى في نفس القطاع؟",
+      "هل تريد تحليل سيناريوهات مستقبلية؟",
+    ],
+  },
+  {
+    id: "planning",
+    emoji: "💰",
+    label: "بناء خطة مالية شخصية",
+    sublabel: "Personal Financial Plan",
+    description: "خطة 12 شهراً مخصصة بناءً على بيانات معاملاتك",
+    trigger: "أريد بناء خطة مالية شخصية. ابدأ بتحليل بياناتي ثم قدّم الخطة.",
+    followUp: [
+      "هل تريد تعديل أي جزء من الخطة؟",
+      "هل تريد نصائح محددة عن استثمار معين؟",
+      "هل تريد متابعة شهرية للتقدم؟",
+    ],
+  },
+  {
+    id: "general",
+    emoji: "❓",
+    label: "استفسار مالي عام",
+    sublabel: "General Financial Inquiry",
+    description: "اسأل أي سؤال مالي أو استثماري",
+    trigger: null,
+    followUp: [
+      "هل لديك سؤال آخر؟",
+      "هل هناك موضوع مالي آخر تريد معرفته؟",
+      "كيف يمكنني مساعدتك أكثر؟",
+    ],
+  },
 ];
 
+// ─── Shared system prompt (also used by FinancialAnalysis) ───────────────────
 export const FINANCIAL_SYSTEM_PROMPT = `أنت مساعد مالي ذكي متخصص في التحليل المالي والتخطيط المالي الشخصي. خبرتك 20 سنة في السوق السعودي والخليج.
 
-دورك:
-1. تحليل القوائم المالية المعقدة وملاحظاتها (Footnotes)
-2. فهم أنماط الإنفاق من البيانات المصرفية (Open Banking)
-3. تقديم نصائح مالية مخصصة
-4. بناء خطط مالية واقعية وقابلة للتنفيذ
-5. شرح المفاهيم المالية بطريقة مبسطة وواضحة
+مبادئك الأساسية:
+1. الدقة في التحليل المالي
+2. الشفافية في النصائح
+3. الخصوصية والأمان في التعامل مع البيانات
+4. التبسيط دون المساس بالدقة
+5. التركيز على الحلول العملية والقابلة للتنفيذ
 
-[MODE 1 - مسار تحليل الـ Footnotes]
-عندما يطلب المستخدم تحليل قائمة مالية أو footnotes شركة:
-- ابحث عن أحدث التقارير المالية للشركة (Annual Report, 10-K)
-- استخرج وحلّل الـ Footnotes مع التركيز على: الديون والالتزامات، الاستثمارات والأصول، العقود الرئيسية، المخاطر
-- قدّم تقريراً شاملاً بهذا الهيكل:
-  أ) ملخص تنفيذي (Executive Summary) في سطرين
-  ب) الملاحظات الرئيسية: لكل footnote — العنوان، الأرقام، الأثر، التقييم (High/Medium/Low Risk)
-  ج) شرح مبسّط للمصطلحات بالعربية
-  د) التوصيات ونقاط المراقبة ومؤشرات التحذير (Red Flags)
-- صنّف المخاطر: 🔴 عالية | 🟡 متوسطة | 🟢 منخفضة
-- اذكر مصدر البيانات والتاريخ
+[MODE 1 - تحليل الملاحظات المالية / Footnotes Analysis]
+عندما يطلب المستخدم تحليل footnotes أو قائمة مالية لشركة:
+- ابحث عن أحدث التقارير المالية (Annual Report, 10-K) واذكر المصدر والتاريخ
+- استخرج وحلّل الملاحظات مع التركيز على: الديون والالتزامات، الاستثمارات والأصول، العقود الرئيسية، المخاطر والسيناريوهات
+- قدّم تقريراً شاملاً بهذا الهيكل الدقيق:
+  **ملخص تنفيذي (Executive Summary):** أهم النقاط في 2-3 جمل
+  **الملاحظات المستخرجة:** لكل footnote — العنوان | الأرقام | الأثر المالي | التقييم
+  **تقييم المخاطر:** 🔴 عالية (High) | 🟡 متوسطة (Medium) | 🟢 منخفضة (Low) — مع نسبة ثقة لكل تقييم
+  **التأثير المالي:** على الأرباح، التدفق النقدي، السيولة
+  **شرح مبسّط:** ترجمة المصطلحات للعربية البسيطة
+  **التوصيات والتنبيهات:** نقاط المراقبة، Red Flags، الفرص المحتملة
 
-[MODE 2 - مسار بناء الخطة المالية]
+[MODE 2 - بناء الخطة المالية الشخصية]
 عندما يطلب المستخدم خطة مالية شخصية:
-- استخدم بيانات المعاملات المرفقة في السياق
-- احسب: نسبة الإنفاق من الدخل، معدل الادخار، نسبة الديون، أكبر 3 مصادر إنفاق
-- قدّم خطة 12 شهراً:
-  الشهر 1-3: تأسيس صندوق الطوارئ
-  الشهر 4-6: تقليل الديون
-  الشهر 7-12: البناء والاستثمار
-- اقترح توزيع الميزانية: 50% ضروريات / 30% اختيارية / 20% استثمارات (مع تعديل حسب الواقع)
+- استخدم بيانات المعاملات المرفقة في السياق بشكل كامل
+- احسب هذه المؤشرات بدقة: Expense Ratio، Savings Rate، Debt Ratio، أكبر 3 مصادر إنفاق
+- صنّف النفقات: السكن | الغذاء | المواصلات | الترفيه | الصحة | الديون | الاستثمارات | أخرى
+- قدّم خطة 12 شهراً مقسّمة على مراحل:
+  الشهر 1-3: تأسيس صندوق الطوارئ (3-6 أشهر من النفقات)
+  الشهر 4-6: تقليل الديون عالية الفائدة
+  الشهر 7-12: البناء والاستثمار المنتظم
+- اقترح توزيع الميزانية 50/30/20 مع تعديله حسب الواقع الفعلي
 - حدّد أهداف SMART: قصيرة (3 أشهر) / متوسطة (سنة) / طويلة (5 سنوات)
+- أضف استراتيجيات الادخار ومؤشرات قياس النجاح الشهرية
 
-قواعد الرد العامة:
+[MODE 3 - استفسار مالي عام]
+عند الأسئلة العامة:
+- افهم السؤال بدقة وقدّم إجابة واضحة ومختصرة
+- استخدم أمثلة واقعية من السياق السعودي والخليجي
+- اشرح المصطلحات المعقدة بالعربية البسيطة
+- قدّم نصائح عملية وقابلة للتنفيذ فوراً
+
+قواعد الرد في جميع الأوضاع:
 1. اجب دائماً بالعربية الفصحى المبسّطة مع الحفاظ على المصطلحات التقنية بالإنجليزية.
-2. استخدم الأرقام والنسب المئوية في كل إجابة — لا تقل فقط "أعلى" أو "أقل".
+2. استخدم الأرقام والنسب المئوية في كل إجابة — لا تقل "أعلى" أو "أقل" فقط.
 3. ابدأ بملخص سريع (جملة واحدة)، ثم التفاصيل، ثم النصائح.
 4. لكل توصية أعطِ نسبة ثقتك (مثال: ثقة 90%).
-5. عند عدم كفاية البيانات، اطرح سؤالاً واضحاً بدلاً من التخمين.
-6. اعتمد على بيانات المستخدم الفعلية المرفقة في السياق عند توفرها.
-7. عند طلب سعر سهم أو شركة، استخدم البيانات من الإنترنت واذكر المصدر والوقت.
-8. عند فشل Plaid أو نقص البيانات: اعرض الإدخال اليدوي كبديل.
+5. عند نقص البيانات، اطرح سؤالاً واضحاً بدلاً من التخمين.
+6. عند فشل Plaid أو نقص البيانات المصرفية، اعرض الإدخال اليدوي كبديل.
+7. عند طلب سعر سهم أو بيانات شركة، استخدم الإنترنت واذكر المصدر والوقت.
 
 تنبيه: أنت أداة مساعدة وليست بديلاً عن مستشار مالي مرخّص؛ ذكّر المستخدم بذلك عند إعطاء توصيات استثمارية.`;
 
-const SYSTEM_PROMPT = FINANCIAL_SYSTEM_PROMPT;
-
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function getSessionId() {
   let id = sessionStorage.getItem(SESSION_KEY);
   if (!id) { id = uid(); sessionStorage.setItem(SESSION_KEY, id); }
   return id;
 }
 
-// Detect if user is asking about a stock price to enable internet context
 function needsInternet(text) {
-  return /سعر|سهم|أسهم|stock|price|تداول|بورصة/.test(text);
+  return /سعر|سهم|أسهم|stock|price|تداول|بورصة|footnote|تقرير سنوي|annual report/i.test(text);
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
 function TypingDots() {
   return (
     <div className="flex justify-start mb-3">
@@ -77,7 +121,7 @@ function TypingDots() {
         <div className="w-7 h-7 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "#252836" }}>
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
         </div>
-        <div className="px-4 py-3 rounded-2xl rounded-tl-sm" style={{ background: "#1a1d27" }}>
+        <div className="px-4 py-3 rounded-2xl" style={{ background: "#1a1d27" }}>
           <div className="flex gap-1 items-center h-4">
             <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
             <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -131,11 +175,71 @@ function Message({ msg }) {
   );
 }
 
+function WelcomeScreen({ onModeSelect, onSend }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full px-4 py-6 text-center">
+      {/* Avatar */}
+      <div
+        className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+        style={{ background: "linear-gradient(135deg,#4f46e5,#7c3aed)" }}
+      >
+        <Sparkles className="w-8 h-8 text-white" />
+      </div>
+
+      <p className="text-white font-bold text-lg mb-1">مرحباً! 👋 أنا مساعدك المالي الذكي</p>
+      <p className="text-slate-400 text-sm mb-6 max-w-xs leading-relaxed">
+        خبرة 20 عاماً في التحليل المالي والاستثمار — اختر ما تريد أو اكتب سؤالك مباشرة
+      </p>
+
+      {/* Mode cards */}
+      <div className="flex flex-col gap-3 w-full max-w-sm mb-6">
+        {MODES.map(mode => (
+          <button
+            key={mode.id}
+            onClick={() => onModeSelect(mode)}
+            className="flex items-center gap-3 p-4 rounded-2xl text-right transition-all active:scale-95"
+            style={{ background: "#1a1d27", border: "1px solid #2e3347" }}
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+              style={{ background: "#252836" }}
+            >
+              {mode.emoji}
+            </div>
+            <div className="flex-1 text-right">
+              <p className="text-white text-sm font-bold leading-tight">{mode.label}</p>
+              <p className="text-slate-500 text-[11px] mt-0.5">{mode.description}</p>
+            </div>
+            <div className="text-slate-600 text-xs flex-shrink-0">←</div>
+          </button>
+        ))}
+      </div>
+
+      {/* Quick questions */}
+      <p className="text-slate-600 text-xs mb-2">أو اسأل مباشرة</p>
+      <div className="flex flex-col gap-1.5 w-full max-w-sm">
+        {["ما أفضل نسبة للادخار من الراتب؟", "اشرح لي مفهوم الـ P/E ratio"].map(q => (
+          <button
+            key={q}
+            onClick={() => onSend(q)}
+            className="text-xs text-right px-3 py-2 rounded-xl text-indigo-400"
+            style={{ background: "#1a1d27", border: "1px solid #2e3347" }}
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function AIAssistant() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [activeMode, setActiveMode] = useState(null);
   const bottomRef = useRef(null);
   const sessionId = useRef(getSessionId());
 
@@ -147,7 +251,10 @@ export default function AIAssistant() {
           "created_date",
           100
         );
-        setMessages(history.map(r => ({ role: r.sender, content: r.message, id: r.id })));
+        const msgs = history.map(r => ({ role: r.sender, content: r.message, id: r.id }));
+        setMessages(msgs);
+        // Restore active mode from last session if messages exist
+        if (msgs.length > 0) setActiveMode("general");
       } finally {
         setLoadingHistory(false);
       }
@@ -167,10 +274,8 @@ export default function AIAssistant() {
         base44.entities.Transaction.filter({ date: { $gte: from.toISOString().split("T")[0] } }, "-date", 200),
         base44.entities.UserSettings.list(),
       ]);
-
       const monthlyIncome = settings?.[0]?.monthly_income || 0;
       const currency = settings?.[0]?.currency || "SAR";
-
       if (txns.length === 0 && !monthlyIncome) return "لا توجد بيانات مالية مسجلة حتى الآن.";
 
       const income = txns.filter(t => t.type === "income").reduce((s, t) => s + (t.amount || 0), 0);
@@ -180,61 +285,54 @@ export default function AIAssistant() {
         byCategory[t.category || "أخرى"] = (byCategory[t.category || "أخرى"] || 0) + t.amount;
       });
       const topCategories = Object.entries(byCategory)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
-        .map(([c, v]) => `${c}: ${v.toLocaleString("ar-SA")} ${currency}`)
-        .join("، ");
-
-      const recentTx = txns.slice(0, 10).map(t =>
+        .sort((a, b) => b[1] - a[1]).slice(0, 6)
+        .map(([c, v]) => `${c}: ${v.toLocaleString("ar-SA")} ${currency}`).join("، ");
+      const recentTx = txns.slice(0, 15).map(t =>
         `${t.date} | ${t.merchant_name} | ${t.type === "expense" ? "-" : "+"}${t.amount} ${t.currency || currency} | ${t.category || "أخرى"}`
       ).join("\n");
 
       return `=== بيانات المستخدم المالية (آخر 90 يوم) ===
-الدخل الشهري المُدخل في الإعدادات: ${monthlyIncome.toLocaleString("ar-SA")} ${currency}
-إجمالي الدخل المسجّل (90 يوم): ${income.toLocaleString("ar-SA")} ${currency}
-إجمالي المصروفات (90 يوم): ${expenses.toLocaleString("ar-SA")} ${currency}
+الدخل الشهري (الإعدادات): ${monthlyIncome.toLocaleString("ar-SA")} ${currency}
+إجمالي الدخل المسجّل: ${income.toLocaleString("ar-SA")} ${currency}
+إجمالي المصروفات: ${expenses.toLocaleString("ar-SA")} ${currency}
 صافي المدخرات: ${(income - expenses).toLocaleString("ar-SA")} ${currency}
-نسبة الادخار: ${income > 0 ? Math.round(((income - expenses) / income) * 100) : 0}%
+نسبة الادخار (Savings Rate): ${income > 0 ? Math.round(((income - expenses) / income) * 100) : 0}%
 أكثر فئات الإنفاق: ${topCategories || "لا يوجد"}
 عدد المعاملات: ${txns.length}
-
-آخر 10 معاملات:
+آخر 15 معاملة:
 ${recentTx || "لا توجد"}
 === نهاية البيانات ===`;
-    } catch {
-      return "";
-    }
+    } catch { return ""; }
   };
 
   const send = async (text) => {
     const userText = (text || input).trim();
     if (!userText || loading) return;
     setInput("");
+    if (!activeMode) setActiveMode("general");
 
     const userMsg = { role: "user", content: userText, id: Date.now() + "_u" };
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
     await base44.entities.Conversation.create({
-      message: userText,
-      sender: "user",
-      session_id: sessionId.current,
+      message: userText, sender: "user", session_id: sessionId.current,
     });
 
     try {
       const context = await buildContext();
-      const history = messages.slice(-6).map(m =>
+      const history = messages.slice(-8).map(m =>
         `${m.role === "user" ? "المستخدم" : "المساعد"}: ${m.content}`
       ).join("\n\n");
 
       const useInternet = needsInternet(userText);
-      const model = useInternet ? "gemini_3_flash" : undefined;
+      const model = useInternet ? "gemini_3_flash" : "claude_sonnet_4_6";
 
-      const prompt = `${SYSTEM_PROMPT}
+      const prompt = `${FINANCIAL_SYSTEM_PROMPT}
 
 ${context}
 
-${history ? `سجل المحادثة:\n${history}\n` : ""}
+${history ? `سجل المحادثة السابقة:\n${history}\n` : ""}
 المستخدم: ${userText}
 
 المساعد:`;
@@ -242,16 +340,13 @@ ${history ? `سجل المحادثة:\n${history}\n` : ""}
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
         add_context_from_internet: useInternet,
-        ...(model ? { model } : {}),
+        model,
       });
 
       const assistantMsg = { role: "assistant", content: result, id: Date.now() + "_a" };
       setMessages(prev => [...prev, assistantMsg]);
-
       await base44.entities.Conversation.create({
-        message: result,
-        sender: "assistant",
-        session_id: sessionId.current,
+        message: result, sender: "assistant", session_id: sessionId.current,
       });
     } catch {
       setMessages(prev => [...prev, {
@@ -264,13 +359,24 @@ ${history ? `سجل المحادثة:\n${history}\n` : ""}
     }
   };
 
+  const handleModeSelect = (mode) => {
+    setActiveMode(mode.id);
+    if (mode.trigger) send(mode.trigger);
+  };
+
   const clearChat = async () => {
     if (!confirm("هل تريد مسح المحادثة وبدء جلسة جديدة؟")) return;
     const newId = uid();
     sessionStorage.setItem(SESSION_KEY, newId);
     sessionId.current = newId;
     setMessages([]);
+    setActiveMode(null);
   };
+
+  // Follow-up chips based on active mode
+  const followUpChips = activeMode
+    ? (MODES.find(m => m.id === activeMode)?.followUp || [])
+    : [];
 
   return (
     <div dir="rtl" className="flex flex-col h-screen" style={{ background: "#111318" }}>
@@ -284,7 +390,9 @@ ${history ? `سجل المحادثة:\n${history}\n` : ""}
             </div>
             <div>
               <h1 className="text-white text-lg font-bold">المساعد المالي الذكي</h1>
-              <p className="text-blue-200 text-xs">يحلل بياناتك ويقدم نصائح مخصصة</p>
+              <p className="text-blue-200 text-xs">
+                {activeMode ? MODES.find(m => m.id === activeMode)?.sublabel : "اختر وضعاً أو اسأل مباشرة"}
+              </p>
             </div>
           </div>
           {messages.length > 0 && (
@@ -295,32 +403,14 @@ ${history ? `سجل المحادثة:\n${history}\n` : ""}
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {loadingHistory ? (
           <div className="flex justify-center py-10">
             <div className="w-6 h-6 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-6">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#1a1d27" }}>
-              <Sparkles className="w-7 h-7 text-indigo-400" />
-            </div>
-            <p className="text-white font-bold mb-1">مرحباً! أنا مساعدك المالي</p>
-            <p className="text-slate-500 text-sm mb-6 max-w-xs">خبرة 20 عاماً في المالية والاستثمار — اسألني عن أي شيء</p>
-            <div className="flex flex-col gap-2 w-full max-w-sm">
-              {SUGGESTED.map(s => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  className="text-sm text-right px-4 py-3 rounded-2xl text-indigo-300 border leading-snug"
-                  style={{ borderColor: "#2e3347", background: "#1a1d27" }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
+          <WelcomeScreen onModeSelect={handleModeSelect} onSend={send} />
         ) : (
           <>
             {messages.map(msg => <Message key={msg.id} msg={msg} />)}
@@ -330,17 +420,17 @@ ${history ? `سجل المحادثة:\n${history}\n` : ""}
         <div ref={bottomRef} />
       </div>
 
-      {/* Starter chips (when there are messages) */}
-      {messages.length > 0 && !loading && (
+      {/* Follow-up chips after conversation */}
+      {messages.length > 0 && !loading && followUpChips.length > 0 && (
         <div className="px-4 pt-2 flex gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
-          {SUGGESTED.map(s => (
+          {followUpChips.map(chip => (
             <button
-              key={s}
-              onClick={() => send(s)}
+              key={chip}
+              onClick={() => send(chip)}
               className="whitespace-nowrap text-xs px-3 py-1.5 rounded-full text-indigo-300 border flex-shrink-0"
               style={{ borderColor: "#2e3347", background: "#1a1d27" }}
             >
-              {s}
+              {chip}
             </button>
           ))}
         </div>
