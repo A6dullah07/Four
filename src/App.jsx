@@ -17,6 +17,7 @@ import Transactions from '@/pages/Transactions';
 import AIAssistant from '@/pages/AIAssistant';
 import FinancialAnalysis from '@/pages/FinancialAnalysis';
 import FinancialPlan from '@/pages/FinancialPlan';
+import PlanTracker from '@/pages/PlanTracker';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,6 +48,7 @@ const AuthenticatedApp = () => {
           <Route path="/assistant" element={<AIAssistant />} />
           <Route path="/analysis" element={<FinancialAnalysis />} />
           <Route path="/plan" element={<FinancialPlan />} />
+          <Route path="/plan-tracker" element={<PlanTracker />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Target, Plus, ChevronDown, ChevronUp, Trash2, X } from "lucide-react";
+import { Target, Plus, ChevronDown, ChevronUp, Trash2, X, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ReactMarkdown from "react-markdown";
 import PlanForm from "@/components/plan/PlanForm";
@@ -105,14 +106,24 @@ export default function FinancialPlan() {
             <h1 className="text-white text-xl font-bold">الخطة المالية</h1>
             <p className="text-blue-200 text-xs mt-0.5">سداد الديون وأهداف الادخار بالذكاء الاصطناعي</p>
           </div>
-          <button
-            onClick={() => setShowForm(s => !s)}
-            className="flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.2)" }}
-          >
-            {showForm ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {showForm ? "إلغاء" : "خطة جديدة"}
-          </button>
+          <div className="flex gap-2">
+            <Link
+              to="/plan-tracker"
+              className="flex items-center gap-1.5 text-white text-xs font-bold px-3 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              متابعة
+            </Link>
+            <button
+              onClick={() => setShowForm(s => !s)}
+              className="flex items-center gap-1.5 text-white text-xs font-bold px-4 py-2.5 rounded-xl"
+              style={{ background: "rgba(255,255,255,0.2)" }}
+            >
+              {showForm ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              {showForm ? "إلغاء" : "خطة جديدة"}
+            </button>
+          </div>
         </div>
       </div>
 
