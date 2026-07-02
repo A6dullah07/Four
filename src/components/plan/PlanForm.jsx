@@ -111,9 +111,11 @@ export default function PlanForm({ onPlanCreated }) {
         monthly_payment: chartData?.monthly_payment || 0,
         months: chartData?.total_months || 0,
         notes: cleanResult,
+        monthly_income: monthlyIncome,
+        monthly_expenses: monthlyExpenses,
       });
 
-      onPlanCreated({ ...saved, title, notes: cleanResult, chartData });
+      onPlanCreated({ ...saved, title, notes: cleanResult, chartData, monthlyIncome: monthlyIncome, monthlyExpenses: monthlyExpenses });
     } finally {
       setLoading(false);
     }

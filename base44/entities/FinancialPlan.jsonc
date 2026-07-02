@@ -14,9 +14,15 @@
     "months": {
       "type": "number"
     },
+    "monthly_income": {
+      "type": "number"
+    },
+    "monthly_expenses": {
+      "type": "number"
+    },
     "notes": {
       "type": "string",
-      "maxLength": 5000
+      "maxLength": 10000
     }
   },
   "required": [

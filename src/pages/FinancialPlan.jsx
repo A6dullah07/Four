@@ -50,7 +50,12 @@ function PlanCard({ plan, onDelete }) {
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t" style={{ borderColor: "#252836" }}>
           <div className="pt-4">
-            <PlanChart chartData={chartData} totalAmount={plan.total_amount} />
+            <PlanChart
+              chartData={chartData}
+              totalAmount={plan.total_amount}
+              monthlyIncome={plan.monthly_income}
+              monthlyExpenses={plan.monthly_expenses}
+            />
           </div>
           {notes && (
             <ReactMarkdown
